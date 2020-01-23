@@ -3,12 +3,14 @@ package notify
 import (
 	"bytes"
 	"fmt"
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
 	"io/ioutil"
+	"net/url"
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 
 	"github.com/free/jiralert/pkg/config"
 	"github.com/free/jiralert/pkg/template"
@@ -179,7 +181,10 @@ func (r *Receiver) search(project, issueLabel string, logger log.Logger) (*jira.
 		Fields:     []string{"summary", "status", "resolution", "resolutiondate"},
 		MaxResults: 2,
 	}
-	level.Debug(logger).Log("msg", "search", "query", query, "options", options)
+	// level.Debug(logger).Log("msg", "search", "query", query, "options", options)
+	u := fmt.Sprintf("rest/api/2/search?jql=%s&startAt=%d&maxResults=%d&expand=%s&fields=%s&validateQuery=%s", url.QueryEscape(query), options.StartAt, options.MaxResults, options.Expand, strings.Join(options.Fields, ","), options.ValidateQuery)
+	level.Debug(logger).Log("msg", "search", "query", u, "options", options)
+
 	issues, resp, err := r.client.Issue.Search(query, options)
 	if err != nil {
 		retry, err := handleJiraError("Issue.Search", resp, err, logger)
